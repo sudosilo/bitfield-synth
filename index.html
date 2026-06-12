@@ -18,12 +18,10 @@
     -webkit-text-fill-color:var(--ink); color-scheme:light only;}
   body{font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
     padding:10px; max-width:560px; margin:0 auto; overflow-x:hidden;}
-  .stage{position:relative; border:1px solid var(--line); border-radius:14px;
-    overflow:hidden; background:var(--field); box-shadow:0 1px 0 #fff inset, 0 6px 18px rgba(15,27,45,.08);}
+  .stage{position:relative; border:1px solid var(--line); border-left:3px solid var(--blue);
+    border-radius:14px; overflow:hidden; background:var(--field);
+    box-shadow:0 1px 0 #fff inset, 0 6px 18px rgba(15,27,45,.08);}
   canvas{display:block; width:100%; height:auto; touch-action:none;}
-  .tag{position:absolute; left:10px; bottom:8px; font:11px/1 ui-monospace,Menlo,monospace;
-    color:#8fb6ff; -webkit-text-fill-color:#8fb6ff; letter-spacing:.5px; opacity:.85;
-    pointer-events:none; text-shadow:0 1px 2px rgba(0,0,0,.6);}
   .panel{background:var(--panel)!important; border:1px solid var(--line);
     border-radius:14px; padding:12px; margin-top:10px;}
   label.lbl{display:block; font-size:11px; font-weight:600; color:var(--muted);
@@ -49,7 +47,7 @@
   .chip{font-size:12px; padding:7px 10px; border:1px solid var(--line); border-radius:999px;
     background:#fff!important; color:var(--ink)!important; -webkit-text-fill-color:var(--ink); cursor:pointer;}
   .seg{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden;}
-  .seg button{border:0; border-radius:0; border-right:1px solid var(--line); padding:8px 11px;}
+  .seg button{border:0; border-radius:0; border-right:1px solid var(--line); padding:8px 9px; font-size:12px;}
   .seg button:last-child{border-right:0;}
   .hint{font-size:11px; color:var(--muted); -webkit-text-fill-color:var(--muted); margin-top:8px;}
   .err{color:#C0392B; -webkit-text-fill-color:#C0392B; font:12px ui-monospace,monospace; margin-top:6px; min-height:14px;}
@@ -59,35 +57,51 @@
 
 <div class="stage">
   <canvas id="cv"></canvas>
-  <div class="tag">// BLUE CODE · Blue Phone</div>
 </div>
 
 <div class="panel">
-  <label class="lbl" for="expr">Expression &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0">vars: x y t a[] · Math.* allowed</span></label>
+  <label class="lbl" for="expr">Expression &nbsp;<span style="font-weight:400;text-transform:none;letter-spacing:0">x y t · bass mid treble vol beat · a[] · Math.*</span></label>
   <div class="expr">
     <textarea id="expr" spellcheck="false">Math.tan(x|y^t/30)*10</textarea>
   </div>
   <div class="err" id="err"></div>
   <div class="presets" style="margin-top:8px">
     <span class="chip" data-e="Math.tan(x|y^t/30)*10">original</span>
-    <span class="chip" data-e="(x^y)+t">xor</span>
-    <span class="chip" data-e="Math.tan(x*y/40 + t/20)*8">moiré</span>
-    <span class="chip" data-e="Math.sin(x/8+t/30)+Math.sin(y/8)+Math.sin((x+y)/16+t/40)">plasma</span>
-    <span class="chip" data-e="(x|y^t/20)*(1+(a[(x+y)&31]||0)*5)">audio bloom</span>
+    <span class="chip" data-e="Math.tan(x|y^t/30)*10*(1+bass*4)">audio tunnel</span>
+    <span class="chip" data-e="(x^y)+t+treble*60">treble xor</span>
+    <span class="chip" data-e="Math.tan(x*y/40 + t/20 + beat*3)*8">beat moiré</span>
+    <span class="chip" data-e="Math.sin(x/8+t/30)+Math.sin(y/8)+Math.sin((x+y)/16+t/40)+vol*4">plasma</span>
+    <span class="chip" data-e="(x|y^t/20)*(1+(a[(x+y)&31]||0)*5)">spectrum bloom</span>
   </div>
 </div>
 
 <div class="panel">
   <div class="row">
     <button class="primary" id="play">Pause</button>
+    <button id="audio">Mic off</button>
+    <button id="loadBtn">Load track</button>
+    <button id="trackBtn" style="display:none">Play ▸</button>
+    <input type="file" id="file" accept="audio/*" hidden>
+  </div>
+  <div class="row">
     <div class="seg" id="color">
       <button data-c="mono" class="on">Mono</button>
       <button data-c="blue">Blue</button>
-      <button data-c="spectrum">Spectrum</button>
+      <button data-c="spectrum">Spec</button>
+      <button data-c="fire">Fire</button>
+      <button data-c="ice">Ice</button>
+      <button data-c="neon">Neon</button>
     </div>
-    <button id="audio">Audio off</button>
   </div>
   <div class="row">
+    <button class="fx" id="fxFlash">Flash</button>
+    <button class="fx" id="fxBlack">Blackout</button>
+    <button class="fx" id="fxInvert">Invert</button>
+    <button class="fx" id="fxHue">Hue spin</button>
+  </div>
+  <div class="row">
+    <div class="ctl"><label class="lbl">Reactivity <span class="val" id="rcV">0.60</span></label>
+      <input type="range" id="rc" min="0" max="150" value="60"></div>
     <div class="ctl"><label class="lbl">Feedback <span class="val" id="fbV">0.995</span></label>
       <input type="range" id="fb" min="950" max="1000" value="995"></div>
     <div class="ctl"><label class="lbl">Speed <span class="val" id="spV">1.0</span></label>
@@ -95,7 +109,7 @@
     <div class="ctl"><label class="lbl">Resolution <span class="val" id="resV">128</span></label>
       <input type="range" id="res" min="48" max="256" step="16" value="128"></div>
   </div>
-  <div class="hint">Field is evaluated per-pixel, then difference-blended against the previous frame scaled by the feedback amount — the same two layers as the Hydra source. Audio fills <code>a[ ]</code> with live mic frequency bins (0–1).</div>
+  <div class="hint">Load track plays an audio file from your phone through the analyser (looped), or use the mic — one source at a time. Every effect is sound-modulated: Fire runs hotter on bass, Ice frosts on treble, Neon's split rides the mids; Flash strobes white on each beat, Blackout chops with the bass, Invert flips on the kick, Hue spin rotates with mids/treble. Reactivity scales all of it, and <code>bass mid treble vol beat</code> stay available in expressions.</div>
 </div>
 
 <script>
@@ -110,8 +124,41 @@ const fctx  = field.getContext('2d', {alpha:false});
 let fbA = document.createElement('canvas'), fbB = document.createElement('canvas');
 let aCtx = fbA.getContext('2d',{alpha:false}), bCtx = fbB.getContext('2d',{alpha:false});
 
-let RES=128, SPEED=1.0, FB=0.995, COLOR='mono', t=0, playing=true;
+let RES=128, SPEED=1.0, FB=0.995, COLOR='mono', t=0, playing=true, REACT=0.6;
 let fn=null, fdata=null, audio=null, aArr=new Float32Array(64);
+// smoothed audio bands + beat envelope
+let sBass=0, sMid=0, sTreb=0, sVol=0, bAvg=0, beatEnv=0, beatCd=0;
+const FX={flash:false,black:false,invert:false,hue:false};
+let hueAng=0, strobePhase=0;
+
+// 256-entry palette LUT, rebuilt each frame (theme + audio gain baked in)
+const palR=new Uint8ClampedArray(256), palG=new Uint8ClampedArray(256), palB=new Uint8ClampedArray(256);
+function hue2rgb(h){ h=((h%360)+360)%360;
+  const c=255, X=(c*(1-Math.abs((h/60)%2-1)))|0;
+  if(h<60)return[c,X,0]; if(h<120)return[X,c,0]; if(h<180)return[0,c,X];
+  if(h<240)return[0,X,c]; if(h<300)return[X,0,c]; return[c,0,X]; }
+function buildPalette(gain){
+  for(let b=0;b<256;b++){
+    let r,g,bl, n=b/255;
+    if(COLOR==='mono'){ r=g=bl=b; }
+    else if(COLOR==='blue'){ r=b*0.22; g=b*0.52; bl=Math.min(255,b*1.1); }
+    else if(COLOR==='spectrum'){ [r,g,bl]=hue2rgb(n*360); }
+    else if(COLOR==='fire'){           // black->red->orange->yellow->white, bass pushes hotter
+      const k=Math.min(1, n*(1+sBass*REACT));
+      r=Math.min(255,k*3*255); g=Math.min(255,Math.max(0,(k-0.33)*3)*255);
+      bl=Math.min(255,Math.max(0,(k-0.66)*3)*255); }
+    else if(COLOR==='ice'){            // black->deep blue->cyan->white, treble frosts the top
+      const k=Math.min(1, n*(1+sTreb*REACT));
+      bl=Math.min(255,k*2.2*255); g=Math.min(255,Math.max(0,(k-0.35)*2.2)*255);
+      r=Math.min(255,Math.max(0,(k-0.7)*3.3)*255); }
+    else {                             // neon: magenta<->cyan duotone, mids rotate the split
+      const split=0.5 + (sMid-0.25)*REACT;
+      if(n<split){ const k=split? n/split:0; r=k*255; g=k*40; bl=k*255; }
+      else { const k=(n-split)/Math.max(0.001,1-split); r=40*(1-k); g=k*255; bl=255; }
+    }
+    palR[b]=r*gain; palG[b]=g*gain; palB[b]=bl*gain;
+  }
+}
 
 function sizeDisplay(){
   const w = cv.clientWidth || 320;
@@ -129,10 +176,10 @@ function sizeField(){
 
 function compile(src){
   try{
-    // x,y in field coords; t time; a[] audio bins; Math available
-    const f = new Function('x','y','t','a','Math',
+    // x,y field coords; t time; a[] raw bins; bass/mid/treble/vol/beat = live audio
+    const f = new Function('x','y','t','a','bass','mid','treble','vol','beat','Math',
       'var v=('+src+'); return v;');
-    f(0,0,0,aArr,Math);                       // smoke test
+    f(0,0,0,aArr,0,0,0,0,0,Math);             // smoke test
     fn=f; setErr(''); return true;
   }catch(e){ setErr(e.message); return false; }
 }
@@ -140,21 +187,15 @@ function setErr(m){ document.getElementById('err').textContent = m; }
 
 function renderField(){
   const d=fdata.data, R=RES;
+  const gain = 1 + (sBass*0.8 + beatEnv*1.6)*REACT;   // bass/beat brightness pulse
+  buildPalette(gain);
   for(let y=0;y<R;y++){
     for(let x=0;x<R;x++){
-      let v; try{ v=fn(x,y,t,aArr,Math); }catch(_){ v=0; }
+      let v; try{ v=fn(x,y,t,aArr,sBass,sMid,sTreb,sVol,beatEnv,Math); }catch(_){ v=0; }
       if(!isFinite(v)) v=0;
-      let b=( (v|0) & 255 );                  // bytebeat-style wrap
-      let r,g,bl;
-      if(COLOR==='mono'){ r=g=bl=b; }
-      else if(COLOR==='blue'){ r=(b*0.22)|0; g=(b*0.52)|0; bl=Math.min(255,(b*1.1)|0); }
-      else { // spectrum: b -> hue
-        const h=b/255*360, c=255, X=(c*(1-Math.abs((h/60)%2-1)))|0;
-        if(h<60){r=c;g=X;bl=0;}else if(h<120){r=X;g=c;bl=0;}
-        else if(h<180){r=0;g=c;bl=X;}else if(h<240){r=0;g=X;bl=c;}
-        else if(h<300){r=X;g=0;bl=c;}else{r=c;g=0;bl=X;}
-      }
-      const i=(y*R+x)*4; d[i]=r; d[i+1]=g; d[i+2]=bl; d[i+3]=255;
+      const b=( (v|0) & 255 );                // bytebeat-style wrap
+      const i=(y*R+x)*4;
+      d[i]=palR[b]; d[i+1]=palG[b]; d[i+2]=palB[b]; d[i+3]=255;
     }
   }
   fctx.putImageData(fdata,0,0);
@@ -162,35 +203,116 @@ function renderField(){
 
 function frame(){
   if(playing){
-    if(audio){ audio.analyser.getByteFrequencyData(audio.buf);
-      for(let i=0;i<aArr.length;i++) aArr[i]=audio.buf[i]/255; }
+    // ---- audio analysis: bands, smoothing, beat ----
+    if(audio){
+      const buf=audio.buf, N=buf.length;
+      audio.analyser.getByteFrequencyData(buf);
+      const bEnd=Math.max(2,(N*0.10)|0), mEnd=(N*0.40)|0;
+      let bass=0,mid=0,treb=0,vol=0;
+      for(let i=0;i<N;i++){ const v=buf[i]/255; aArr[i]=v; vol+=v;
+        if(i<bEnd) bass+=v; else if(i<mEnd) mid+=v; else treb+=v; }
+      bass/=bEnd; mid/=(mEnd-bEnd); treb/=(N-mEnd); vol/=N;
+      const atk=0.5, rel=0.12;                 // fast attack, slow release = musical pump
+      sBass+=(bass-sBass)*(bass>sBass?atk:rel);
+      sMid +=(mid -sMid )*(mid >sMid ?atk:rel);
+      sTreb+=(treb-sTreb)*(treb>sTreb?atk:rel);
+      sVol +=(vol -sVol )*(vol >sVol ?0.4:rel);
+      bAvg = bAvg*0.96 + sBass*0.04;            // running bass average
+      if(sBass>bAvg*1.4 && sBass>0.12 && beatCd<=0){ beatEnv=1; beatCd=6; }
+      beatEnv*=0.86; if(beatCd>0)beatCd--;
+      aArr.bass=sBass; aArr.mid=sMid; aArr.treble=sTreb; aArr.vol=sVol; aArr.beat=beatEnv;
+    } else { sBass*=0.9; sMid*=0.9; sTreb*=0.9; sVol*=0.9; beatEnv*=0.85; }
+
+    // ---- engine modulation driven by audio ----
+    let FBe=FB, SPe=SPEED;
+    if(audio && REACT>0){
+      FBe = Math.min(0.999, FB + sBass*0.04*REACT - beatEnv*0.03*REACT); // bass trails, beat zoom-punch
+      SPe = SPEED*(1 + sVol*1.3*REACT);                                  // energy speeds time
+    }
+
     renderField();
-    // new = | field  -  prev*FB |   (Hydra diff + scale feedback)
+    // new = | field  -  prev*FBe |   (Hydra diff + scale feedback)
     aCtx.globalCompositeOperation='copy';
     aCtx.drawImage(field,0,0,cv.width,cv.height);          // upscaled field
     aCtx.globalCompositeOperation='difference';
-    const w=cv.width,h=cv.height, sw=w*FB, sh=h*FB;
+    const w=cv.width,h=cv.height, sw=w*FBe, sh=h*FBe;
     aCtx.drawImage(fbB,(w-sw)/2,(h-sh)/2,sw,sh);           // prev, scaled & centered
-    dctx.drawImage(fbA,0,0);                               // show
+
+    // ---- display draw with sound-driven FX ----
+    let filt='';
+    if(FX.hue){ hueAng=(hueAng + (2 + (sMid*30+sTreb*40)*REACT))%360;   // mids/treble spin color
+      filt+='hue-rotate('+(hueAng|0)+'deg) '; }
+    if(FX.invert && beatEnv>0.08) filt+='invert('+((beatEnv*100)|0)+'%) '; // negative on the kick
+    dctx.filter=filt||'none';
+    dctx.drawImage(fbA,0,0);
+    dctx.filter='none';
+    if(FX.flash && beatEnv>0.08){            // white strobe pop on beat
+      dctx.fillStyle='rgba(255,255,255,'+(Math.min(0.85,beatEnv*0.7*REACT)).toFixed(3)+')';
+      dctx.fillRect(0,0,cv.width,cv.height); }
+    if(FX.black){                            // blackout chop: gates with the bass
+      strobePhase+=0.25+sBass*REACT*1.2;
+      if(sBass>0.1 && (strobePhase|0)%2===0){
+        dctx.fillStyle='rgba(0,0,0,'+(Math.min(0.9,sBass*REACT)).toFixed(3)+')';
+        dctx.fillRect(0,0,cv.width,cv.height); } }
+
     [fbA,fbB]=[fbB,fbA]; [aCtx,bCtx]=[bCtx,aCtx];          // ping-pong
-    t += SPEED;
+    t += SPe;
   }
   requestAnimationFrame(frame);
 }
 
-// ---- audio ---------------------------------------------------------------
-async function toggleAudio(btn){
-  if(audio){ audio.stream.getTracks().forEach(t=>t.stop());
-    audio=null; btn.textContent='Audio off'; btn.classList.remove('on'); return; }
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-    const ac=new (window.AudioContext||window.webkitAudioContext)();
-    const an=ac.createAnalyser(); an.fftSize=128;
-    ac.createMediaStreamSource(stream).connect(an);
-    audio={stream,analyser:an,buf:new Uint8Array(an.frequencyBinCount)};
+// ---- audio: one analyser, two sources (mic / uploaded track) -------------
+let actx=null, micSrc=null, micStream=null, trackEl=null, trackSrc=null;
+function ensureAnalyser(){
+  if(!actx){
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    const an=actx.createAnalyser(); an.fftSize=256; an.smoothingTimeConstant=0.7;
+    audio={analyser:an, buf:new Uint8Array(an.frequencyBinCount)};
     aArr=new Float32Array(an.frequencyBinCount);
-    btn.textContent='Audio on'; btn.classList.add('on');
+  }
+  if(actx.state==='suspended') actx.resume();
+  return audio.analyser;
+}
+function stopMic(){
+  if(micStream){ micStream.getTracks().forEach(tr=>tr.stop()); micStream=null; }
+  if(micSrc){ micSrc.disconnect(); micSrc=null; }
+  const b=document.getElementById('audio');
+  b.textContent='Mic off'; b.classList.remove('on');
+}
+async function toggleMic(btn){
+  if(micStream){ stopMic(); return; }
+  try{
+    if(trackEl && !trackEl.paused) pauseTrack();   // one source at a time
+    const an=ensureAnalyser();
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    micSrc=actx.createMediaStreamSource(micStream);
+    micSrc.connect(an);                            // analyser only — no speaker echo
+    btn.textContent='Mic on'; btn.classList.add('on');
   }catch(e){ setErr('mic blocked: '+e.message); }
+}
+function pauseTrack(){
+  trackEl.pause();
+  document.getElementById('trackBtn').textContent='Play \u25B8';
+}
+function loadTrack(file){
+  const an=ensureAnalyser();
+  stopMic();
+  if(trackEl){ trackEl.pause(); URL.revokeObjectURL(trackEl.src); }
+  if(!trackEl){
+    trackEl=new Audio(); trackEl.loop=true; trackEl.crossOrigin='anonymous';
+    trackEl.addEventListener('play', ()=>{ stopMic();
+      document.getElementById('trackBtn').textContent='Pause \u275A\u275A'; });
+    trackEl.addEventListener('pause',()=>{ 
+      document.getElementById('trackBtn').textContent='Play \u25B8'; });
+  }
+  trackEl.src=URL.createObjectURL(file);
+  if(!trackSrc){ trackSrc=actx.createMediaElementSource(trackEl);
+    trackSrc.connect(an); an.connect(actx.destination); }  // hear it + analyze it
+  const tb=document.getElementById('trackBtn');
+  tb.style.display=''; tb.classList.add('on');
+  document.getElementById('loadBtn').textContent=
+    (file.name.length>18? file.name.slice(0,16)+'\u2026' : file.name);
+  trackEl.play().catch(e=>setErr('play: '+e.message));
 }
 
 // ---- wiring --------------------------------------------------------------
@@ -204,7 +326,18 @@ document.querySelectorAll('#color button').forEach(b=>b.onclick=()=>{
   COLOR=b.dataset.c;
   document.querySelectorAll('#color button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on');});
-document.getElementById('audio').onclick=function(){toggleAudio(this);};
+document.getElementById('audio').onclick=function(){toggleMic(this);};
+document.getElementById('loadBtn').onclick=()=>document.getElementById('file').click();
+document.getElementById('file').addEventListener('change',e=>{
+  if(e.target.files[0]) loadTrack(e.target.files[0]);});
+document.getElementById('trackBtn').onclick=()=>{
+  if(!trackEl) return;
+  if(trackEl.paused){ ensureAnalyser(); trackEl.play(); } else pauseTrack();};
+[['fxFlash','flash'],['fxBlack','black'],['fxInvert','invert'],['fxHue','hue']]
+  .forEach(([id,k])=>{ const b=document.getElementById(id);
+    b.onclick=()=>{ FX[k]=!FX[k]; b.classList.toggle('on',FX[k]); };});
+const rc=document.getElementById('rc'),rcV=document.getElementById('rcV');
+rc.oninput=()=>{REACT=rc.value/100; rcV.textContent=REACT.toFixed(2);};
 const fb=document.getElementById('fb'),fbV=document.getElementById('fbV');
 fb.oninput=()=>{FB=fb.value/1000; fbV.textContent=FB.toFixed(3);};
 const sp=document.getElementById('sp'),spV=document.getElementById('spV');
