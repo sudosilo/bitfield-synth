@@ -466,7 +466,7 @@ function loadTrack(file){
 // ---- wiring --------------------------------------------------------------
 const ex=document.getElementById('expr');
 ex.addEventListener('input',()=>compile(ex.value));
-document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+document.querySelectorAll('.chip[data-e]').forEach(c=>c.onclick=()=>{
   ex.value=c.dataset.e; compile(ex.value);});
 document.getElementById('play').onclick=function(){
   playing=!playing; this.textContent=playing?'Pause':'Play';};
